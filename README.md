@@ -92,8 +92,10 @@ q = (q ^ w_right) | (q & ~w_left);
 ### The cracking logic:  
 
 The Cracking Logic (SAT Solver): Since we cannot use a matrix inverse, we must model the system as a Boolean Logic Puzzle.   
-We define the Key as a set of 64 unknown variables ($k_0, k_1, \dots, k_{63}$). We then generate thousands of logical constraints based on the captured data:  
-Constraint 1: (k0 & k1) | (!k2 & k3) ... = Output_Bit_0Constraint 2: (k1 & k2) | (!k3 & k4) ... = Output_Bit_1...  
+We define the Key as a set of 64 unknown variables ($k_0, k_1, \dots, k_{63}$).  
+We then generate thousands of logical constraints based on the captured data:
+* **Constraint 1:** `(k0 & k1) | (!k2 & k3) ... = Output_Bit_0`
+* **Constraint 2:** `(k1 & k2) | (!k3 & k4) ... = Output_Bit_1`
   
 This creates a system of ***CNF (Conjunctive Normal Form)*** equations. To crack it, we use a ***SAT Solver (Z3)***. The solver effectively tries to "guess" values for the variables that satisfy every single constraint simultaneously.  
 **Rule 90 (Linear):** Solving 64 equations takes $64^3$ operations (Milliseconds).    
@@ -125,5 +127,6 @@ The current research relies on software-based solvers (Z3 running on a CPU). Fut
 1.  **FPGA-Based SAT Solvers:** Porting the cracking logic to high-end FPGAs (e.g., **Xilinx UltraScale+** or **Versal ACAP**).
 2.  **Parallelism:** Utilizing the FPGA's DSP slices and logic cells to evaluate number of key candidates in parallel.
 3.  **Pipelined Brute-Force:** Implementing a fully pipelined "Guess-and-Check" engine to drastically reduce the time-to-crack for non-linear systems, moving the attack vector from "Theoretical" to "Practical."
+
 
 
