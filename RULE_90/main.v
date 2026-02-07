@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 (* top *) module top (
+    // Clock and Reset pins
     (* iopad_external_pin, clkbuf_inhibit *) input clk,
     (* iopad_external_pin *) output clk_en, 
     (* iopad_external_pin *) input rst_n,
@@ -28,18 +29,16 @@
     
     // -----------------------------------------------------------
     // 1. Valid Pulse Generation
-    // Create a 1-cycle pulse when SPI finishes receiving data
-    // -----------------------------------------------------------
+    // 1-cycle pulse when SPI finishes receiving data
     always @(posedge clk) begin
         rx_valid_d <= rx_valid;
     end
     
-    // Pulse is high only on the rising edge of valid
+    // Pulse is high only on the rising edge of valid signal
     wire valid_pulse = rx_valid & ~rx_valid_d; 
 
     // -----------------------------------------------------------
     // 2. SPI TARGET
-    // -----------------------------------------------------------
     spi_target #(
         .CPOL(0), .CPHA(0), .WIDTH(64), .LSB(0)
     ) u_spi (
@@ -50,19 +49,18 @@
         .o_miso(spi_miso), .o_miso_oe(spi_miso_en),
         .o_rx_data(rx_data),       
         .o_rx_data_valid(rx_valid),
-        .i_tx_data(prng_out),     // ERROR FIXED: Sending the actual Rule 90 state
+        .i_tx_data(prng_out),    
         .o_tx_data_hold()
     );
 
     // -----------------------------------------------------------
-    // 3. PRNG / Rule 90 Generator
-    // -----------------------------------------------------------
+    // 3. PRNG Generator
     prng_gen gen1 (
         .clk(clk),
         .reset(rst_n), 
-        .data_in(rx_data),      // Data from SPI
-        .rx_valid_pulse(valid_pulse), // Only step when SPI transaction completes
-        .q_out(prng_out),       // Send state back to SPI
+        .data_in(rx_data),     
+        .rx_valid_pulse(valid_pulse), 
+        .q_out(prng_out),      
         .led_sig(led)
     );
 
