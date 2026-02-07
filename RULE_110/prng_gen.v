@@ -2,8 +2,8 @@ module prng_gen(
     input wire clk,
     input wire reset,
     input [63:0] data_in,
-    input wire rx_valid_pulse, // Only step/load when this pulses
-    output wire [63:0] q_out,  // SEND THIS TO SPI
+    input wire rx_valid_pulse, 
+    output wire [63:0] q_out, 
     output wire led_sig
 );
 
@@ -12,8 +12,6 @@ module prng_gen(
     wire [63:0] w_left, w_right;
     assign w_right = {q[62:0], 1'b0};
     assign w_left = {1'b0, q[63:1]};
-
-    // Send the internal state out to the top module
     
     always @(posedge clk or negedge reset) begin
         if(!reset) begin
@@ -21,19 +19,17 @@ module prng_gen(
             output_flag <= 1'b0;
         end
         else if (rx_valid_pulse) begin
-            // LOGIC: If incoming data is NOT zero, load it as a SEED.
-            // If incoming data IS zero, STEP the Rule 90 Automaton.
             if (data_in != 64'd0) begin
-                q <= data_in; // Load Seed
+                q <= data_in;  // Load the data from the rp2040
             end else begin
-                // Rule 110 Step
+                // Rule-110
                 q <= (q ^ w_right) | (q & ~w_left);
             end
             output_flag <= ~output_flag; // Toggle LED to show activity
         end
     end
     
-	assign q_out = {60'd0,q[32:29]};
+	assign q_out = {60'd0,q[32:29]}; // Leakng the 4 bits out of the data stream. 
 	assign led_sig = output_flag;
 
 endmodule
