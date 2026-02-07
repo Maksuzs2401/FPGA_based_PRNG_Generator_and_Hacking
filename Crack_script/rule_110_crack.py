@@ -4,7 +4,7 @@ import sys
 import os
 import tracemalloc 
 
-# --- CONFIGURATION ---
+# --- reading the file
 FILENAME = "fpga_dump.txt"
 
 def load_data_from_file(filename):
@@ -23,20 +23,20 @@ def load_data_from_file(filename):
 
 def solve_verilog_rule110(captured_data):
     
-    # 1. START MEASUREMENT
+    # Start measurement of parameters
     tracemalloc.start()
     start_cpu_time = time.process_time()
     start_wall_time = time.time()
     
     s = Solver()
     
-    # 1. Creating the Key
+    # Creating the Key
     key = BitVec('key', 64)
     
    
     s.add(Extract(63, 32, key) == 0)
     
-    # 2. Building the Logic Chain
+    # Building the Logic Chain
     states = [key]
     START_BIT = 29
     WINDOW_WIDTH = 4
@@ -46,13 +46,13 @@ def solve_verilog_rule110(captured_data):
     for t, observed_val in enumerate(captured_data):
         current_state = states[-1]
         
-        # A. Observation Constraints
+        # Observation Constraints
         for bit_offset in range(WINDOW_WIDTH):
             target_index = START_BIT + bit_offset
             observed_bit = (observed_val >> bit_offset) & 1
             s.add(Extract(target_index, target_index, current_state) == observed_bit)
             
-        # B. (Rule 110)
+        # (Rule 110)
         next_state = BitVec(f's_{t}', 64)
         w_right = (current_state << 1)
         w_left = LShR(current_state, 1)
@@ -63,7 +63,7 @@ def solve_verilog_rule110(captured_data):
 
     print(" Done.")
     
-    # 3. Solve
+    # Solution
     print("[Step 2] Launching Z3 Solver")
     solve_start = time.process_time()
     
@@ -71,18 +71,17 @@ def solve_verilog_rule110(captured_data):
     
     solve_end = time.process_time()
     
-    # 2. STOP MEASUREMENT
     end_cpu_time = time.process_time()
     end_wall_time = time.time()
     current_mem, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     
-    # 3. CALCULATE STATS
+    # 3. Calculating parameters
     total_cpu_s = (end_cpu_time - start_cpu_time)
     solve_cpu_s = (solve_end - solve_start)
     peak_ram_mb = peak_mem / (1024 * 1024)
 
-    # 4. PRINT RESULTS
+    # 4. printing results
     print("--------------PARAMETERS--------------")
     print(f"ATTACK TARGET:")
     print(f"  - Algorithm:     Rule 110 CA (Non-Linear)")
@@ -94,18 +93,17 @@ def solve_verilog_rule110(captured_data):
     print(f"  - Solver Only Time: {solve_cpu_s:.2f} s")
     print(f"  - Peak RAM Usage:   {peak_ram_mb:.2f} MB")
     print("-" * 42)
-    print(f"CRYPTANALYSIS:")
     
     if result == sat:
         model = s.model()
         recovered_key = model[key].as_long()
         print(f"  - Cracked Key:    0x{recovered_key:016X}")
-        print("  - Status:         [SUCCESS] Collision Found")
+        print("  - Status:         [SUCCESS]")
     else:
-        print("  - Status:         [FAILURE] Unsatisfiable")
-    print("==========================================")
+        print("  - Status:         [FAILURE]")
 
 if __name__ == "__main__":
     print(f"Reading from {FILENAME}...")
     data = load_data_from_file(FILENAME)
+
     solve_verilog_rule110(data)
