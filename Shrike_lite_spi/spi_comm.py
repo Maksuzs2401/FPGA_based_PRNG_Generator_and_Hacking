@@ -9,7 +9,7 @@ spi = machine.SPI(0, baudrate=1_000_000, polarity=0, phase=0, bits=8, firstbit=m
                   sck=machine.Pin(SCK), mosi=machine.Pin(MOSI), miso=machine.Pin(MISO))
 
 def spi_transfer_u64(val_int):
-    tx_data = struct.pack('>Q', val_int)
+    tx_data = struct.pack('>Q', val_int)   #unsigned big-endian 
     rx_data = bytearray(8)
     cs.value(0)
     spi.write_readinto(tx_data, rx_data)
@@ -17,11 +17,11 @@ def spi_transfer_u64(val_int):
     return struct.unpack('>Q', rx_data)[0]
 
 # --- CAPTURE SEQUENCE ---
-KEY = 0x123456789ABCDEF0
-spi_transfer_u64(KEY)
+KEY = 0x123456789ABCDEF0       #for rule 110 KEY = 0x000000000ABCDEF0
+spi_transfer_u64(KEY)              
 time.sleep_ms(1)
 
-print("Capturing 64 steps of history...")
+print("Capturing data...")
 captured_ints = []
 
 # 1. Capture Step 0
@@ -29,7 +29,6 @@ val = spi_transfer_u64(0)
 captured_ints.append(val)
 
 # 2. Capture Steps 1-63
-# We need this long history to let the 'hidden' lower bits ripple up to the window.
 for i in range(63):
     val = spi_transfer_u64(0)
     captured_ints.append(val)
@@ -43,5 +42,4 @@ print(f"Saving to '{FILENAME}'...")
 with open(FILENAME, "w") as f:
     # Save as comma-separated numbers
     f.write(",".join(str(x) for x in captured_ints))
-
 print("Done.")
