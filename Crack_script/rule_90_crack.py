@@ -26,7 +26,7 @@ def rule90_step(state_int, width=64):
     return left ^ right
 
 def solve_rectangular(matrix, result_vector, n_vars=64):
-    """Gaussian Elimination for Over-Defined Systems"""
+    #Gaussian Elimination
     n_rows = len(matrix)
     M = [row[:] + [res] for row, res in zip(matrix, result_vector)]
     
@@ -66,12 +66,12 @@ def solve_rectangular(matrix, result_vector, n_vars=64):
 
 def main():
     
-    # Parameter measurement
+    # Parameter Measurement
     tracemalloc.start()
     start_cpu_time = time.process_time()
     start_wall_time = time.time()
 
-    # --- PROCESSING START ---
+    # --- Processing 
     
     print(f"[Input] Reading from {FILENAME}...")
     captured_steps = load_data_from_file(FILENAME)
@@ -126,14 +126,12 @@ def main():
     for i, bit in enumerate(recovered_bits):
         if bit: key |= (1 << i)
 
-    # --- PROCESSING END ---
-
     end_cpu_time = time.process_time()
     end_wall_time = time.time()
     current_mem, peak_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
 
-    # 3. CALCULATE STATS
+    # Calculating Parameters
     total_cpu_ms = (end_cpu_time - start_cpu_time) * 1000
     solve_cpu_ms = (solve_end - solve_start) * 1000
     peak_ram_kb = peak_mem / 1024
@@ -163,4 +161,5 @@ def main():
         print("[FAILURE]")
 
 if __name__ == "__main__":
+
     main()
