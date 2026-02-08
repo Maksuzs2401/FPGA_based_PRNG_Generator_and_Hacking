@@ -14,7 +14,7 @@
 ### 2. Timing Performance
 F_clk = 50Mhz (utilizing internal oscillator)  
 | Metric | Value |  
-| :--- | :--- | :--- |  
+| :--- | :--- |    
 | **Max Achievable Frequency ($F_{max}$)** | **112.54 MHz** |   
 | **Min Clock Period** | 8.886 ns |    
 | **Logic Depth** | 5 Stages |  
